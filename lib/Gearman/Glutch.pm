@@ -5,7 +5,7 @@ use utf8;
 use parent qw/Class::Accessor::Fast/;
 
 use 5.010001;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use POSIX ":sys_wait_h";
 
@@ -70,6 +70,11 @@ sub run {
         }
     };
 
+    $SIG{INT} = $SIG{TERM} = sub {
+        $self->shutdown();
+        exit 0;
+    };
+
     # run main loop
     Danga::Socket->EventLoop();
 }
@@ -109,8 +114,25 @@ sub spawn_worker {
 sub DESTROY {
     my $self = shift;
     return if $self->{child};
+    $self->shutdown();
+}
 
-    kill 'TERM', keys %{$self->{pids}};
+sub shutdown :method {
+    my $self = shift;
+
+    $self->signal_all_children('TERM');
+    $self->_wait_all_children();
+}
+
+sub signal_all_children {
+    my ( $self, $sig ) = @_;
+    for my $pid ( sort keys %{ $self->{pids} } ) {
+        kill $sig, $pid;
+    }
+}
+
+sub _wait_all_children {
+    my $self = shift;
 
     my $kid;
     do {

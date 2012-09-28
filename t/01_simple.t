@@ -10,7 +10,7 @@ use Storable;
 
 my $tcp = Test::TCP->new(code => sub {
     my $port = shift;
-    my $glutch = Gearman::Glutch->new(port => $port);
+    my $glutch = Gearman::Glutch->new(port => $port, max_workers => 1);
     $glutch->register_function('add', sub {
         my $job = shift;
         my ($a, $b) = split /,/, $job->arg;
@@ -25,6 +25,6 @@ my $ret = $client->do_task('add', "2,3");
 is(ref($ret), 'SCALAR');
 is($$ret, "5");
 
+undef $tcp;
 
 done_testing;
-
