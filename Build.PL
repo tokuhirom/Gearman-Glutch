@@ -18,6 +18,7 @@ my $build = Module::Build->new(
         'Gearman::Worker'                      => '0',
         'Gearman::Server'                      => '0',
         'parent'                        => '0',
+        'Class::Accessor::Fast' => 0,
     },
 
     no_index    => { 'directory' => [ 'inc' ] },
